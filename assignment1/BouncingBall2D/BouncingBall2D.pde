@@ -8,7 +8,7 @@
 // If you are new to processing, you can find an excellent tutorial that will quickly
 // introduce the key features here: https://processing.org/tutorials/p3d/
 
-String projectTitle = "Bouncing Ball";
+String projectTitle = "BouncingBall2D";
 
 //Animation Principle: Store object & world state in external variables that are used by both
 //                     the drawing code and simulation code.
