@@ -1,143 +1,189 @@
-import processing.opengl.*;
-import java.util.concurrent.CopyOnWriteArrayList; 
-import java.util.*;
+import peasy.*; //<>// //<>// //<>//
 
-float radius = 100;
-float ang = 0, ang2 = 0;
-int pts = 120;
-float depth = 20;
-float x_velocity = 4;
-float y_velocity = -10;
-float z_velocity = 0;
 float acceleration = 9.8;
-float floor = -depth;
-static CopyOnWriteArrayList<Ball> ball_list = new CopyOnWriteArrayList<Ball>(); 
-void setup(){
- size(400, 400, OPENGL);
- //size(400, 400, P3D);
+float time_before;
+PeasyCam cam;
+PShape fountain;
+PShape drop;
+float floor = -75;
+float initial_life_time = 40;
+PVector sphere_pos = new PVector(-100, 0, 0);
+float sphere_r = 30;
+float generate_rate = 1500;
 
- background(255,255,255,1);
- 
- smooth();  // comment out with P3D renderer
- noStroke();
- 
- 
-  //camera(width/2.0, -100, (height/2.0) / tan(PI*30.0 / 180.0), width/2.0, -50, 0, 0, 1, 0);
- directionalLight(166, 166, 196, -60, -60, -60);
- ambientLight(105, 105, 130);
- //translate(width/2, height/2, -200);
- 
-
- drawCylinder();
-   int pts = 6;
-   float ang = 0;
-   float r_ball = 3;
-   for (int i=0; i<pts; i++){
-     float vx = x_velocity * cos(radians(ang)) - z_velocity * sin(radians(ang));
-     float vy = y_velocity;
-     float vz = x_velocity * sin(radians(ang)) + z_velocity * cos(radians(ang));
-     ang+=360.0/(pts+1);
-     ball_list.add(new Ball(0, -depth, 0, r_ball, vx, vy, vz));
-   }   
-
+public void settings() {
+  size(1000, 1000, P3D);
 }
 
-void drawCylinder(){
-   //body
- camera(0, -100, (height/2.0) / tan(PI*30.0 / 180.0), 0, -50, 0, 0, 1, 0);
- fill(150);
- beginShape(QUAD_STRIP);
- float ang = 0;
- for (int i=0; i<=pts; i++){
-   float  px = cos(radians(ang))*radius;
-   float  pz = sin(radians(ang))*radius;
-   vertex(px, depth, pz);
-   vertex(px, -depth, pz);
-   ang+=360/pts;
- }
- endShape();
- 
- //cap 1
- beginShape(POLYGON);
- for (int i=0; i<=pts; i++){
-   float  px = cos(radians(ang))*radius;
-   float  pz = sin(radians(ang))*radius;
-   vertex(px, depth, pz);
-   
-   ang+=360/pts;
- }
- endShape();
-
- //cap2
- fill(0,255,255); 
- beginShape(POLYGON);
- for (int i=0; i<=pts; i++){
-   float  px = cos(radians(ang))*radius;
-   float  pz = sin(radians(ang))*radius;
-   vertex(px, -depth, pz);
-   ang+=360/pts;
-   
- }
- endShape();
-}
-
-
-class Ball{
-  float x_pos, y_pos, z_pos;
-  float v_x, v_y, v_z;
-  float r_ball;
+public void setup() {
   
-  Ball(float x, float y, float z, float r, float vx, float vy, float vz){
-    this.x_pos = x;
-    this.y_pos = y;
-    this.z_pos = z;
-    this.v_x = vx;
-    this.v_y = vy;
-    this.v_z = vz;
-    this.r_ball = r;
+  cam = new PeasyCam(this, 500);
+  cam.setMinimumDistance(50);
+  cam.setMaximumDistance(2000);
+  time_before = millis();
+  fountain = loadShape("resource/3d-model.obj");
+  
+}
+
+public class Particle{
+  PVector pos, vel, col;
+  float lifetime;
+  float particle_size;
+  float bounce_loss_ratio = 0.95;
+  float bounce_v_loss_ratio = 0.5;
+  float n_generate = 1;
+  float tail_length = 3;
+  public Particle(float h_vel, float v_vel, PVector col, PVector pos, float lifetime, float particle_size){
+    float theta = random(2*PI);
+    float initial_h_vel = h_vel;
+    float initial_v_vel = v_vel;
+    this.col = col;
+    vel = new PVector(initial_h_vel*cos(theta), initial_v_vel, initial_h_vel*sin(theta));
+    this.pos = pos;
+    this.lifetime = lifetime;    
+    this.particle_size = particle_size;
   }
   
-  void update(float dt){
-      this.x_pos = this.x_pos + this.v_x * dt;
-      this.y_pos = this.y_pos + this.v_y * dt;  //Question: Why update position before velocity? Does it matter?
-      this.v_y = this.v_y + acceleration * dt; 
-      this.z_pos = this.z_pos + this.v_z * dt;
-      //if (this.v_x<0){
-      //System.out.println(this.x_pos);
-      //System.out.println(this.z_pos);
-      //}
-      if (this.y_pos< floor){
-        translate(this.x_pos, this.y_pos, this.z_pos);
-        sphere(this.r_ball);
-      }else{
-        this.r_ball = this.r_ball * 0.1;
-        //if (r_ball>0.1){ //<>//
-        //   float ang = 0; //<>//
-        //   int pts = 10;
-        //   for (int i=0; i<pts; i++){
-        //     float  px = x_pos;
-        //     float  pz = z_pos;
-        //     float py = y_pos;
-        //     float vx = v_x * 0.8 * cos(radians(ang));
-        //     float vz = v_z * 0.8 * sin(radians(ang));
-        //     float vy = -v_y*0.8;
-        //     ang+=360/pts;
-        //     ball_list.add(new Ball(px, py, pz, r_ball, vx, vy, vz));
-        //   }                   
-        //}
-        this.r_ball = 0.1;
+  public void update(float dt, ArrayList<Particle> particle_list){   
+    pos.add(PVector.mult(vel, dt)); 
+    vel.y += dt * acceleration;
+    PVector c_delta = col.copy();
+    c_delta.sub(new PVector(255,255,255)).div(lifetime).mult(dt);
+    col.sub(c_delta);
+    particle_size -= particle_size/lifetime*dt;
+    float h_vel = sqrt(vel.x*vel.x+vel.z*vel.z)*bounce_loss_ratio*random(1.0);
+    float v_vel = -vel.y*bounce_loss_ratio*bounce_v_loss_ratio*random(1.0);
+    PVector direction = PVector.sub(pos, sphere_pos);
+    float distance = direction.mag();
+    if (pos.y + particle_size > 50 || distance - particle_size <= sphere_r){
+      for (int i = 0;i < n_generate; i++){
+        particle_list.add(new Particle(h_vel, v_vel, col, pos, lifetime*bounce_loss_ratio, particle_size*bounce_loss_ratio*random(1.0)));
       }
+      lifetime = 0;
+    }
+    
+  }
+  
+  public void display(float dt) {
+    
+    beginShape(LINES);
+    strokeWeight(particle_size);
+    stroke(col.x, col.y, col.z, lifetime/initial_life_time*255);
+    vertex(pos.x, pos.y, pos.z);
+    strokeWeight(particle_size/10);
+    vertex(pos.x, pos.y- particle_size/2, pos.z);
+    endShape();
+    
+    beginShape(LINES);
+    //strokeWeight(particle_size);
+    stroke(col.x, col.y, col.z, lifetime/initial_life_time*255);
+    vertex(pos.x, pos.y, pos.z);
+    strokeWeight(particle_size/10);
+    stroke(255,255,255, lifetime/initial_life_time*255);
+    PVector s = PVector.sub(pos, PVector.mult(vel, dt*tail_length));
+    vertex(s.x, s.y, s.z);
+    endShape();
   }
 }
 
-void draw(){
-  drawCylinder();
-  fill(0,220,220);
-   for (Ball ball: ball_list){
-     
-     if (ball.r_ball > 0.1){
-       ball.update(0.01); //<>//
-     }
-   }
+public void showFountain(){
+  
+  background(255, 255, 255);
+  pushMatrix();
+  rotateX(PI);
+  shapeMode(CENTER);
+  shape(fountain,0,0);
+  pushMatrix();  
+  translate(-100, 0, 0);
+  noStroke();
+  fill(230);
+  sphere(sphere_r);
+  popMatrix();
+  beginShape();
+  fill(176*1.15, 196*1.15, 222*1.15);
+  float n_point = 360;
+  float angle = 360.0/n_point;
+  float r = 160;
+  for (int i = 0; i < n_point; i++) {
+      float x = cos( radians( i * angle ) ) * r;
+      float z = sin( radians( i * angle ) ) * r;
+      vertex( x - 168, floor+25, z);
+  }
+  endShape(CLOSE);
+  translate(0, floor, 0);
+  fill(255,255,240);
+  box(3000,10,3000);
+  popMatrix();
+  
+
+}
+
+public class ParticleSystem{
+  float acceleration = 9.8;
+  ArrayList<Particle> particle_list = new ArrayList<Particle>();
+  
+  public float updateTime(){
+    float time_start = millis();
+    float time_gap = time_start - time_before;
+    time_before = time_start;
+    return time_gap;
+  }
+  
+  public void deleteParticle(float dt){
+    int n_particle = particle_list.size();
+    for (int i = n_particle-1; i >= 0; i--){
+        particle_list.get(i).lifetime -= dt;
+        if (particle_list.get(i).lifetime<=0 || particle_list.get(i).particle_size<=0.1)
+        particle_list.remove(i);
+    }
+  }
+  
+  public void generateParticle(float dt){
+    for (int i = 0; i < dt*generate_rate; i++) 
+    particle_list.add(new Particle(10, -40, new PVector(176*0.8, 196*0.8, 222*0.8), new PVector(-180, -60, 0), initial_life_time, 5));
+  }
+  
+  public void updateParticle(float dt){
+    int n_particle = particle_list.size();
+    for (int i = n_particle-1; i >= 0; i--) particle_list.get(i).update(dt, particle_list);
+  }
+  
+  public void displayParticle(float dt){
+    for (Particle particle: particle_list) particle.display(dt);
+  }  
+}
+
+ParticleSystem ps = new ParticleSystem();
+int flag = 0;
+public void draw() {
+  pushMatrix();
+  lights();
+  translate(180, 100, 0);
+  
+  //draw fountain
+  showFountain();
+  float dt = ps.updateTime()/1000.0;
+  
+  
+  if (flag!=0){
+    // generate particle each round
+    ps.generateParticle(dt); //<>//
+    
+    // update particle position, color, velocity
+    ps.updateParticle(dt); //<>//
+    
+    //calculate lifetime, delete dead particles
+    ps.deleteParticle(dt);
+    
+    //display particles
+    ps.displayParticle(dt);  //<>//
+  }else{
+    flag = 1;
+  }
+  println("# of Particles: " + ps.particle_list.size());  
+  println("Frame Rate: " + frameRate);
+  
+  popMatrix();
+
 
 }
