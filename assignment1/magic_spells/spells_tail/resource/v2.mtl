@@ -1,0 +1,44 @@
+newmtl aiStandard1SG
+illum 4
+Kd 0.85 0.65 0.88
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl aiStandard2SG
+illum 4
+Kd 0.52 0.50 0.69
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl aiStandard3SG
+illum 4
+Kd 1.00 1.00 1.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl aiStandard4SG
+illum 4
+Kd 0.83 0.47 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 1.00 1.00 1.00
+newmtl aiStandard5SG
+illum 4
+Kd 0.12 0.12 0.12
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.50 0.50 0.50
+newmtl aiStandard6SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd v2.png
+bump v2.tga -bm 0.01
+Ni 1.00
+Ks 0.50 0.50 0.50
