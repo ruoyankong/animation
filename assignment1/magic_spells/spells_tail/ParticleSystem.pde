@@ -6,14 +6,16 @@ class ParticleSystem{
   ArrayList<Particle> particles = new ArrayList<Particle>();
   float genRate = 200;
   PVector v;
-  boolean ready = false;
-  boolean start = false;
+  
+  boolean barrier = false;
+  boolean meetbarrier = false;
+
   
   PShape groupShape;
   
   ParticleSystem(int systemType){
 
-    //PShape groupShape = createShape(PShape.GROUP);
+    
     type = systemType;
     numParticles = 0;
     if (type == 1 || type == 2){
@@ -35,37 +37,33 @@ class ParticleSystem{
     
     if (numParticles < 1){
     groupShape = createShape(PShape.GROUP);
+    if(type == 1 && !windSound.isPlaying() ){
+      windSound.play();
+    }
+    if (type == 3 && !fireSound.isPlaying() ){
+     fireSound.play();
+    }
+    barrier = false;
+    
     for (int i = 0; i < 10000; i++){
-//      float r = 30;
-//      float x1 = random(-1,1);
-//      float x2 = random(-1,1);
-//      float x, y, z;
-      
-////!: redefine region
-//      PVector pos = new PVector(center.x + r* sqrt(x1*x1),
-//                     center.y + r* sqrt(x1*x1),
-//                     center.z + r* sqrt(x1*x1));
-                     
-      
-//      x =  center.x+ r*(x1*sqrt(1-(x1*x1)-(x2*x2)));
-//      y =  center.y + r*(x2*sqrt(1-(x1*x1)-(x2*x2)));
-//      z =  center.z + r*((1 - ((x1*x1)+(x2*x2))));
+
       float r = 30;
       float x1 = random(0,1);
       float x2 = random(0,1);
       r = r * sqrt(x1);
       float theta = 2 * PI * x2;
-      float phi = acos(1 -PI * random(0,1));
+      //float phi 
+      float phi = acos(2 * random(0,1)-1);
       float x = center.x + r * sin(phi)*cos(theta);
       float z = center.z + r * cos(phi);
       float y = center.y + r * sin(phi) * sin(theta);
       
       PVector pos = new PVector(x,y,z);
-      
+
       if(y < center.y){
          
         v= new PVector(random(-5, -3), 1, 0); 
-        //v= new PVector(0, 0, 0); 
+
       }
       else{
         v= new PVector(random(-5, -3), -1, 0); 
@@ -75,7 +73,6 @@ class ParticleSystem{
       
       
       if(type == 3){
-        // v.x = random(4,5);
 
          v.x = (pos.x - center.x)/10 ;
        
@@ -85,20 +82,9 @@ class ParticleSystem{
           
         }
         
-        //if(y < center.y && z < center.z){
-          
-        //  v.z = 1;
-        //}
-        //else if(y < center.y && z > center.z){
-        //  v= new PVector(random(-5, -3), -1, 0); 
-        //}
-        
-        
-        //  v.x = (pos.x - center.x)/3;
-        //}
-        //v.x = random(4,5);
-        //v.x = abs((pos.x - center.x)/10);
+
       }
+     
       Particle p = new Particle(pos,v,type,numParticles);
       particles.add(p);
       numParticles++;
@@ -111,13 +97,20 @@ class ParticleSystem{
   void drawDefense(){
     if (numParticles < 1){
     groupShape = createShape(PShape.GROUP);
+    if(!windSound.isPlaying()&&  type == 2){
+      waterSound.play();
+    }
+    if ( !woodSound2.isPlaying() &&  type == 4){
+       woodSound2.play();
+    }
+    meetbarrier = false;
     for (int i = 0; i < 10000; i++){
       float r = 30;
       float x1 = random(0,1);
       float x2 = random(0,1);
       r = r * sqrt(x1);
       float theta = 2 * PI * x2;
-      float phi = acos(1 -PI * random(0,1));
+      float phi = acos(2* random(0,1) - 1);
       float x = center.x + r * sin(phi)*cos(theta);
       float z = center.z + r * cos(phi);
       float y = center.y + r * sin(phi) * sin(theta);
@@ -162,6 +155,7 @@ class ParticleSystem{
     if (keyCode == LEFT && type == 1) {
       //drawWind();
       drawAttack();
+      
     }
     
     if (keyCode == UP && type == 2){
@@ -181,48 +175,65 @@ class ParticleSystem{
     }
 
     }
-
-    strokeWeight(3);
     
-    ready = true;
+    //if it is wind 
+    if(type == 1 && numParticles> 0){
+      Collections.sort(particles,new MyCompare());
+    }
+    if(type == 3&& numParticles> 0){
+      Collections.sort(particles,new MyCompare());
+      Collections.reverse(particles);
+    }
+   
+    
+   
     for (int i = particles.size()-1; i >= 0; i--) {
       Particle p = particles.get(i);
       p.run();
-
-      //p.part.translate(10,0,0);
-      
-      if(i == 0){
-
-      }
+   
       if (p.isDead()) {
         particles.remove(i);
         numParticles --;
       }
-      
-      if(p.state == 2){
-        ready = false;
-      }
-      
-      
+            
     }
     
-    if(type == 4 && ready == true && start == false){
-
-      
-      numF = iter;
-      start = true;
     
-    }
-    
-    if(type == 4 && numParticles == 0){
-      numF = 0;
-      start = false;
-    }
     
     if(numParticles > 0 ){
-  
+
       shape(groupShape);
     }
+    else{
+      switch(type){
+        case 1:
+        windSound.stop();
+        break;
+        case 2:
+        waterSound.stop();
+        break;
+        case 3:
+        fireSound.stop();
+        break;
+        case 4:
+        woodSound2.stop();
+        break;
+        
+      }
+
+      barrier = false;
+      meetbarrier = false;
+    }
+    
+  }
+  
+  Particle getHead(){
+    if(numParticles > 0){
+      
+      return particles.get(0);
+      
+    }
+    else return null;
   }
   
 }

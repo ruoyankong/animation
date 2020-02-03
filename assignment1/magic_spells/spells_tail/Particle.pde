@@ -1,7 +1,7 @@
 
-class Particle {
+class Particle  {
   
-  public PVector position;
+  PVector position;
   PVector velocity;
   PVector acceleration;
   float lifespan;
@@ -28,33 +28,30 @@ class Particle {
   Particle(PVector l, PVector v, int particleType ,int pid) {
     acceleration = new PVector(0.05, 0,0);
     velocity = v;
-    position = l.copy();
+    position = l;
     type = particleType;
     lifespan = 0;
     id = pid;
     
-        stroke(initColor);
-    //stroke(initColor, (255-lifespan));
-    //point(position.x,position.y,position.z);
+     stroke(initColor);
+
     switch(type){
       case 1:
-        initColor = wind;
-        //red = 
+          red = int(100 );
+          g = int(250 );
+          b = int(0);
         break;
       case 2:
-        initColor = water;
         red = 29;
         g = 0;
         b = 253;
         break;
       case 3:
-        initColor = fire;
         red = 255;
         g = 50;
         b = 30;
         break;
       case 4:
-        initColor = wood;
         red = 255;
         g = 200;
         b = 0;
@@ -74,26 +71,150 @@ class Particle {
     part.endShape();
     part.setTint(color(red,g,b));
 
-    
+
     
   }
+  public float getPosX(){
+    return position.x;
+  }
+  
+ // @Override
+ // public int compare(Particle b){ 
+ ////if this particle is on the right of b, it will be the larger one.
+ 
+ //    return this.position.x.compareTo(b.position.x);
+ // }
 
 
   void run() {
-    //part.setTint(color(255,0,0));
-    //part.translate(-10,0,0);
+
     update();
     collisionHandler();
-    //display();
+
   }
   
   
   void collisionHandler(){
+    
+    //check floor
     if(position.y + 2> floorY){
       position.y = floorY - 2; 
       velocity.y = - velocity.y;
+      if(type == 4){
+        velocity.y -= 1;
+      }
+    }
+    
+    switch(type){
+        case 1:
+          checkWoodBarrier();
+          checkFireAttack();
+          break;
+        //case 2:
+        //  updateWater();
+        //  break;
+        case 3:
+          checkWaterBarrier();
+          checkWindAttack();
+          break;
+        //case 4:
+        //  updateWood();
+        //  break;
+      }
+    
+    
+  }
+  
+  void checkWoodBarrier(){
+    if(woodSys.barrier){
+      if(position.x < startL.x - 25 + r  && state == 0){
+         if(!disappear.isPlaying()){
+          disappear.play();
+          woodSound2.stop();
+          windSound.stop();
+        }
+        velocity.x = 0;
+        velocity.y = random(-10,0);
+        velocity.z = random(-1,1);
+        state = 1;
+        windSys.meetbarrier = true;
+      }
+      
+    }
+    else if(windSys.meetbarrier){
+
+      if(position.x < startL.x - 40 + r && state == 0){
+        lifespan += 20;
+      }
+      
+     }
+
+    
+    
+  }
+  
+  void checkWaterBarrier(){
+    
+    if(waterSys.barrier){
+      if(position.x > startR.x - 80 && position.x < startR.x - 75 && state ==0){
+       if(!disappear.isPlaying()){
+        disappear.play();
+        waterSound.stop();
+        fireSound.stop();
+        }
+        velocity.x = -5;
+        velocity.y = -10;
+        velocity.z = random(-5,5);
+        state = 1;
+        fireSys.meetbarrier = true;
+      }
+      else if(position.x > startR.x - 75 && state ==0){
+        part.setTint(0);
+        lifespan = 256;
+      }
+    }
+     else if(fireSys.meetbarrier){
+      if(position.x > startR.x - 80){
+        lifespan = 256;
+      }
+     }
+  }
+  
+  void checkFireAttack(){
+    Particle fireP = fireSys.getHead();
+    
+    if (fireP == null) return;
+    
+    if ( fireP.position.x > this.position.x && state == 0) {
+      
+      if(!disappear.isPlaying()){
+        disappear.play();
+      }
+      
+      velocity.x = random(0,5);
+      velocity.y = random(-1,1);
+      velocity.z = random(-1,1);
+      state = 1;
+      lifespan = 250;
     }
   }
+  void checkWindAttack(){
+    Particle windP = windSys.getHead();
+    
+    if (windP == null) return;
+    
+    if ( windP.position.x < this.position.x && state == 0) {
+      velocity.x = random(-5,0);
+      velocity.y = random(-5,5);
+      velocity.z = random(-1,1);
+      state = 1;
+      lifespan = 250;
+    }
+    
+  }
+  
+  
+  
   // Method to update position
   void update() {
     
@@ -127,20 +248,36 @@ class Particle {
   
   void updateWind(){
 
+    float transX = 0;
+    float transY = 0;
+    float transZ = 0;
     
-    position.x = position.x + velocity.x;
-    position.y = sin(position.x/(10))*(1-lifespan/255)*10 *velocity.y;
-    position.z = position.z + velocity.z ;
     
-    red -=2;
-    g += 30;
-    b +=1;
+    if(state ==0 ){
+      
+      transX = velocity.x;
+      transY = sin(position.x/(10))*(1-lifespan/255)*10 *velocity.y;;
+      transZ = velocity.z ;
+      
+      red -=2;
+      g += 30;
+      b +=1;
+      
+    }
+    else{
+      velocity.y += 0.98;
+      transX = velocity.x;
+      transY = velocity.y;
+      transZ = velocity.z  ;
+    }
+    
+    position.x += transX;
+    position.y += transY;
+    position.z += transZ ;
+    
 
     part.setTint(color(red,g,b,255 - lifespan) );
-    
-    position.z = position.z + velocity.z;
-    
-    part.translate(velocity.x, sin(position.x/(10))*(1-lifespan/255)*10 *velocity.y, velocity.z );
+    part.translate(transX,transY,transZ );
   
 }
   
@@ -157,7 +294,7 @@ class Particle {
     }
    
     if(position.y < -250 &&  state == 0){
-
+      waterSys.barrier = true;
       lifespan = 0;   
       float a = random(-1,1);
       float b = random(TWO_PI);
@@ -178,8 +315,8 @@ class Particle {
       
       //g -= radius;
       
-      transX =  radius * sqrt(1-x2*x2) * cos(theta);
-      transZ =  radius * sqrt(1-x2*x2) * sin(theta);
+      transX =  radius * sqrt(1-x2*x2) * cos(theta) - 20;
+      transZ =  radius * sqrt(1-x2*x2) * sin(theta) + 50;
       transY =  radius ;
       
       d_color = radius;
@@ -206,35 +343,47 @@ class Particle {
   
   void updateFire(){
           
-    position.x = position.x + velocity.x;
-    position.z = position.z + velocity.z ;
-
-
-
-
+    float transX = 0;
+    float transY = 0;
+    float transZ = 0;
+    
+    
+    
     g += 1;
     b +=lifespan/50;
     part.setTint(color(red,g,b,255 - lifespan) );
 
+   if(state == 0){
+      transX = velocity.x;
+      transY = sin(position.x/(5))*(1-lifespan/255) * 3 *velocity.y;
+      transZ = velocity.z;
     
-    position.z = position.z + velocity.z;
+      if(velocity.y > 0 && position.y > startL.y){
+        transY = -transY;
+      }
+      if(velocity.y < 0 && position.y < startL.y){
+        transY = -transY;
+      }
+   }
+   else{
+     velocity.y += 0.98;
+     transX = velocity.x;
+     transY = velocity.y;
+     transZ = velocity.z;
+   }
     
-    float transY = sin(position.x/(5))*(1-lifespan/255) * 3 *velocity.y;
-    
-    if(velocity.y > 0 && position.y > startL.y){
-      transY = -transY;
-    }
-    if(velocity.y < 0 && position.y < startL.y){
-      transY = -transY;
-    }
     position.y +=transY;
+    position.x += transX;
+    position.z += transZ;
 
-    part.translate(velocity.x, transY,  velocity.z );
+
+    part.translate(transX, transY,  transZ );
   
   }
   
   
   void updateWood(){
+    
     
     float transX = 0;
     float transY = 0;
@@ -258,6 +407,8 @@ class Particle {
     }
     
     else if(state == 1){
+      woodSys.barrier = true;
+      
       float dx = position.x  - startL.x + 50;
       float dz = position.z - startL.z;
       float d = sqrt(dx*dx + dz*dz);
@@ -296,6 +447,7 @@ class Particle {
 
   boolean isDead() {
     if (lifespan > 255) {
+      part.setVisible(false);
       return true;
     } else {
       return false;
