@@ -10,6 +10,7 @@ class ParticleSystem{
   boolean barrier = false;
   boolean meetbarrier = false;
 
+
   
   PShape groupShape;
   
@@ -18,6 +19,8 @@ class ParticleSystem{
     
     type = systemType;
     numParticles = 0;
+    
+    
     if (type == 1 || type == 2){
       center = startR;
     }
@@ -36,59 +39,53 @@ class ParticleSystem{
     
     
     if (numParticles < 1){
-    groupShape = createShape(PShape.GROUP);
-    if(type == 1 && !windSound.isPlaying() ){
-      windSound.play();
-    }
-    if (type == 3 && !fireSound.isPlaying() ){
-     fireSound.play();
-    }
-    barrier = false;
+      groupShape = createShape(PShape.GROUP);
+      if(type == 1 && !windSound.isPlaying() ){
+        windSound.play();
+      }
+      if (type == 3 && !fireSound.isPlaying() ){
+       fireSound.play();
+      }
+      barrier = false;
     
-    for (int i = 0; i < 10000; i++){
+      for (int i = 0; i < 10000; i++){
 
-      float r = 30;
-      float x1 = random(0,1);
-      float x2 = random(0,1);
-      r = r * sqrt(x1);
-      float theta = 2 * PI * x2;
-      //float phi 
-      float phi = acos(2 * random(0,1)-1);
-      float x = center.x + r * sin(phi)*cos(theta);
-      float z = center.z + r * cos(phi);
-      float y = center.y + r * sin(phi) * sin(theta);
+        float r = 30;
+        float x1 = random(0,1);
+        float x2 = random(0,1);
+        r = r * sqrt(x1);
+        float theta = 2 * PI * x2;
+     
+        float phi = acos(2 * random(0,1)-1);
+        float x = center.x + r * sin(phi)*cos(theta);
+        float z = center.z + r * cos(phi);
+        float y = center.y + r * sin(phi) * sin(theta);
       
-      PVector pos = new PVector(x,y,z);
+        PVector pos = new PVector(x,y,z);
 
-      if(y < center.y){
-         
-        v= new PVector(random(-5, -3), 1, 0); 
-
-      }
-      else{
-        v= new PVector(random(-5, -3), -1, 0); 
-      }
-
-      
-      
-      
-      if(type == 3){
-
-         v.x = (pos.x - center.x)/10 ;
-       
-
-         if(pos.x < center.x){
-          v.x = ((center.x - pos.x))/5 ;
-          
-        }
         
+        //particles on upper and lower hemisphere has wave shape in different direction.
+        if(y < center.y){
+          v= new PVector(random(-5, -3), 1, 0); 
+        }
+        else{
+          v= new PVector(random(-5, -3), -1, 0); 
+        }
 
+      
+      
+      //fire particles on left-half hemisphere has larger speed.
+      if(type == 3){
+         v.x = (pos.x - center.x)/10 ;
+         if(pos.x < center.x){
+          v.x = ((center.x - pos.x))/5 ; 
+        }
       }
      
       Particle p = new Particle(pos,v,type,numParticles);
       particles.add(p);
       numParticles++;
-      groupShape.addChild(p.part);
+      groupShape.addChild(p.particleShape);
       }
     }
     
@@ -143,40 +140,39 @@ class ParticleSystem{
       Particle p = new Particle(pos,v,type,numParticles);
       particles.add(p);
       numParticles ++;
-      groupShape.addChild(p.part);
+      groupShape.addChild(p.particleShape);
       }
     }
   }
 
   void run() {
- //if up / E is pressed 
+
    if (keyPressed) {
         
     if (keyCode == LEFT && type == 1) {
-      //drawWind();
       drawAttack();
       
     }
     
     if (keyCode == UP && type == 2){
-      //drawWater();
+
       drawDefense();
     }
     
     
-    if (key == 'd' && type == 3){
-      //drawFire();
+    if (keyCode == RIGHT && type == 3){
+
       drawAttack();
     }
     
-    if (key == 'w' && type == 4){
-      //drawWood();
+    if (keyCode == DOWN && type == 4){
+
       drawDefense();
     }
 
     }
     
-    //if it is wind 
+    //sort the list
     if(type == 1 && numParticles> 0){
       Collections.sort(particles,new MyCompare());
     }
@@ -227,11 +223,17 @@ class ParticleSystem{
     
   }
   
+// return the leftmost/rightmost particle in the list.
   Particle getHead(){
     if(numParticles > 0){
-      
-      return particles.get(0);
-      
+      return particles.get(0);     
+    }
+    else return null;
+  }
+  
+  Particle getLast(){
+    if(numParticles > 0){
+      return particles.get(numParticles-1);     
     }
     else return null;
   }

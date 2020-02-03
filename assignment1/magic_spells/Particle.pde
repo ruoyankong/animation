@@ -3,11 +3,8 @@ class Particle  {
   
   PVector position;
   PVector velocity;
-  PVector acceleration;
   float lifespan;
-  color initColor;
   int type;
-  color currColor;
   float gravity = 0.98;
   boolean highest = false;
   float r = 125;
@@ -15,7 +12,7 @@ class Particle  {
   
   int state = 0;
   
-  PShape part;
+  PShape particleShape;
   
   int red = int(100 );
   int g = int(250 );
@@ -24,16 +21,22 @@ class Particle  {
   
   float d_color;
   
+  //Four type of particles. 
+  //1 wind attack
+  //2 water defense
+  //3 fire attack
+  //4 wood defense
+  // Each kind of particle has different behavior.
+  
   
   Particle(PVector l, PVector v, int particleType ,int pid) {
-    acceleration = new PVector(0.05, 0,0);
+
     velocity = v;
     position = l;
     type = particleType;
     lifespan = 0;
     id = pid;
     
-     stroke(initColor);
 
     switch(type){
       case 1:
@@ -59,17 +62,17 @@ class Particle  {
     }
     
     float size = random(5,10) ;
-    part = createShape();
-    part.beginShape(QUAD);
-    part.noStroke();
-    part.texture(sprite);
-    part.normal(0, 0, 1);
-    part.vertex(position.x-size/2, position.y -size/2,position.z,  0, 0);
-    part.vertex(position.x+size/2, position.y-size/2 ,position.z, sprite.width, 0);
-    part.vertex(position.x+size/2, position.y +size/2,position.z, sprite.width, sprite.height);
-    part.vertex(position.x-size/2, position.y+size/2,position.z, 0, sprite.height);
-    part.endShape();
-    part.setTint(color(red,g,b));
+    particleShape = createShape();
+    particleShape.beginShape(QUAD);
+    particleShape.noStroke();
+    particleShape.texture(sprite);
+    particleShape.normal(0, 0, 1);
+    particleShape.vertex(position.x-size/2, position.y -size/2,position.z,  0, 0);
+    particleShape.vertex(position.x+size/2, position.y-size/2 ,position.z, sprite.width, 0);
+    particleShape.vertex(position.x+size/2, position.y +size/2,position.z, sprite.width, sprite.height);
+    particleShape.vertex(position.x-size/2, position.y+size/2,position.z, 0, sprite.height);
+    particleShape.endShape();
+    particleShape.setTint(color(red,g,b));
 
 
     
@@ -78,13 +81,6 @@ class Particle  {
     return position.x;
   }
   
- // @Override
- // public int compare(Particle b){ 
- ////if this particle is on the right of b, it will be the larger one.
- 
- //    return this.position.x.compareTo(b.position.x);
- // }
-
 
   void run() {
 
@@ -106,46 +102,70 @@ class Particle  {
     }
     
     switch(type){
+      //For fire particles and wind particles, they have additional collision check.
         case 1:
-          checkWoodBarrier();
           checkFireAttack();
+          if(woodSys.barrier) checkWoodBarrier();
+          else checkLeftWand();
           break;
-        //case 2:
-        //  updateWater();
-        //  break;
+
         case 3:
-          checkWaterBarrier();
           checkWindAttack();
+          if(waterSys.barrier)checkWaterBarrier();
+          else checkRightWand();
           break;
-        //case 4:
-        //  updateWood();
-        //  break;
+
       }
     
     
   }
   
+  void checkLeftWand(){
+    if(position.x < startL.x - 20  && state == 0){
+
+      state = 1;
+      lifespan = 256;
+      if(windSys.numParticles < 2){
+        leftHit ++;
+      }
+    }
+    
+  }
+  
+  void checkRightWand(){
+    
+     if(position.x > startR.x + 15  && state == 0){
+      state = 1;
+      lifespan = 256;
+      if(fireSys.numParticles < 2){
+        rightHit ++;
+      }
+     }
+     
+  }
+  
   void checkWoodBarrier(){
-    if(woodSys.barrier){
-      if(position.x < startL.x - 25 + r  && state == 0){
+    //if wood barrier exists, it should take care of the potential collision.
+
+      if(position.x < startL.x - 20 + r  && state == 0){
          if(!disappear.isPlaying()){
           disappear.play();
           woodSound2.stop();
           windSound.stop();
         }
-        velocity.x = 0;
+        velocity.x = random(0,1);
         velocity.y = random(-10,0);
         velocity.z = random(-1,1);
         state = 1;
         windSys.meetbarrier = true;
       }
       
-    }
-    else if(windSys.meetbarrier){
+
+    if(windSys.meetbarrier){
 
       if(position.x < startL.x - 40 + r && state == 0){
         lifespan += 20;
-      }
+        }
       
      }
 
@@ -154,8 +174,8 @@ class Particle  {
   }
   
   void checkWaterBarrier(){
-    
-    if(waterSys.barrier){
+    //if water barrier exists, it should take care of the potential collision.
+
       if(position.x > startR.x - 80 && position.x < startR.x - 75 && state ==0){
        if(!disappear.isPlaying()){
         disappear.play();
@@ -167,9 +187,9 @@ class Particle  {
         velocity.z = random(-5,5);
         state = 1;
         fireSys.meetbarrier = true;
-      }
-      else if(position.x > startR.x - 75 && state ==0){
-        part.setTint(0);
+      
+      if(position.x > startR.x - 75 && state ==0){
+        particleShape.setTint(0);
         lifespan = 256;
       }
     }
@@ -184,7 +204,8 @@ class Particle  {
     Particle fireP = fireSys.getHead();
     
     if (fireP == null) return;
-    
+    // if the fire particle meet the wind particle,
+    // they will change direction and disappear after 5 frams
     if ( fireP.position.x > this.position.x && state == 0) {
       
       if(!disappear.isPlaying()){
@@ -203,6 +224,8 @@ class Particle  {
     
     if (windP == null) return;
     
+    // if the fire particle meet the wind particle,
+    // they will change direction and disappear after 5 frams
     if ( windP.position.x < this.position.x && state == 0) {
       velocity.x = random(-5,0);
       velocity.y = random(-5,5);
@@ -217,7 +240,7 @@ class Particle  {
   
   // Method to update position
   void update() {
-    
+    //do not move any particle if the key is pressed
     if(keyPressed){
       position.x = position.x + random(-1,1);
       position.y = position.y + random(-1,1);
@@ -241,7 +264,6 @@ class Particle  {
       }
       
       lifespan += 1.0;
-      currColor = color(initColor,(255-lifespan));
     }
   }
   
@@ -252,7 +274,7 @@ class Particle  {
     float transY = 0;
     float transZ = 0;
     
-    
+    //move in y direction in wave shape and move in x direction with constant speed
     if(state ==0 ){
       
       transX = velocity.x;
@@ -264,6 +286,8 @@ class Particle  {
       b +=1;
       
     }
+    
+    // freely falling after collision
     else{
       velocity.y += 0.98;
       transX = velocity.x;
@@ -276,8 +300,8 @@ class Particle  {
     position.z += transZ ;
     
 
-    part.setTint(color(red,g,b,255 - lifespan) );
-    part.translate(transX,transY,transZ );
+    particleShape.setTint(color(red,g,b,255 - lifespan) );
+    particleShape.translate(transX,transY,transZ );
   
 }
   
@@ -287,12 +311,13 @@ class Particle  {
     float transY = 0;
     float transZ = 0;
     
+    //freely falling
     if(state == 0){
       velocity.y += 0.98/10;
       transY = velocity.y;
 
     }
-   
+   //form a new shape after reached the specific height
     if(position.y < -250 &&  state == 0){
       waterSys.barrier = true;
       lifespan = 0;   
@@ -313,8 +338,8 @@ class Particle  {
       velocity.x = 100*sqrt(a)*sin(b);
       velocity.z =  100*sqrt(a)*cos(b);
       
-      //g -= radius;
-      
+
+      // form a water drop shape
       transX =  radius * sqrt(1-x2*x2) * cos(theta) - 20;
       transZ =  radius * sqrt(1-x2*x2) * sin(theta) + 50;
       transY =  radius ;
@@ -324,8 +349,8 @@ class Particle  {
       //part.rotate(1/2*PI);
         
     }  
+    //stay the water drop shape
     else if (state == 1){
-      
       g += d_color/50;
       transX = random(-2,2);
       transY = random(-2,2);
@@ -333,8 +358,8 @@ class Particle  {
 
     }
     
-    part.setTint(color(red,g,b,255-lifespan));
-    part.translate(transX,transY,transZ);
+    particleShape.setTint(color(red,g,b,255-lifespan));
+    particleShape.translate(transX,transY,transZ);
     position.x += transX;
     position.y +=transY;
     position.z +=transZ;
@@ -351,8 +376,9 @@ class Particle  {
     
     g += 1;
     b +=lifespan/50;
-    part.setTint(color(red,g,b,255 - lifespan) );
+    particleShape.setTint(color(red,g,b,255 - lifespan) );
 
+   //move in y direction as wave shape.
    if(state == 0){
       transX = velocity.x;
       transY = sin(position.x/(5))*(1-lifespan/255) * 3 *velocity.y;
@@ -365,6 +391,7 @@ class Particle  {
         transY = -transY;
       }
    }
+   // freely falling after collision
    else{
      velocity.y += 0.98;
      transX = velocity.x;
@@ -377,7 +404,7 @@ class Particle  {
     position.z += transZ;
 
 
-    part.translate(transX, transY,  transZ );
+    particleShape.translate(transX, transY,  transZ );
   
   }
   
@@ -389,13 +416,14 @@ class Particle  {
     float transY = 0;
     float transZ = 0;
     
-    
+    //change shape from sphere to a disk
     if(state == 0){
       
       if(position.y > startL.y + 51){
         transY = - 0.98;
         
       }
+      
       else if (position.y < startL.y - 51){
         transY = 0.98;
       }
@@ -406,6 +434,7 @@ class Particle  {
       
     }
     
+    //change shape from a disk to a circle
     else if(state == 1){
       woodSys.barrier = true;
       
@@ -423,20 +452,21 @@ class Particle  {
         lifespan = 0;
       }
     }
+    
+    //assign initial velocity to the particles at circle.
     else if(state == 2){
        velocity.y = random(5);
        transY = velocity.y;
        state = 3;
     }
-     
+    //drop due to gravity.
     if(state == 3){
-
       velocity.y = velocity.y + 0.98;
       transY = velocity.y;
     }
     
-    part.setTint(color(red,g,b,255-lifespan));
-    part.translate(transX,transY,transZ);
+    particleShape.setTint(color(red,g,b,255-lifespan));
+    particleShape.translate(transX,transY,transZ);
     position.x += transX;
     position.y +=transY;
     position.z +=transZ;
@@ -447,7 +477,7 @@ class Particle  {
 
   boolean isDead() {
     if (lifespan > 255) {
-      part.setVisible(false);
+      particleShape.setVisible(false);
       return true;
     } else {
       return false;

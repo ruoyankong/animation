@@ -1,3 +1,5 @@
+//Class for comparing position of particles.
+
 class MyCompare implements Comparator<Particle>{
 
     public int compare(Particle p1, Particle p2) {

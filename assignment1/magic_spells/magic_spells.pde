@@ -4,12 +4,11 @@ import processing.sound.*;
 
 PeasyCam cam;
 PShape wand;
+PShape wand_moon;
+PShape wand_heart;
 PImage ground;
+PImage wandimg;
 PVector startVel = new PVector(0,0,0);
-//color wind = color(100,250,0);
-//color water = color(0,0,155);
-//color fire = color(155,0,0);
-//color wood = color(255,200,0);
 PVector startL = new PVector(-350,-160,0);
 PVector startR = new PVector(350,-160,0);
 PVector boomCenterR  = new PVector(410,-250,0);
@@ -30,6 +29,9 @@ SoundFile woodSound1;
 SoundFile woodSound2;
 SoundFile disappear;
 
+int leftHit = 0;
+int rightHit = 0;
+
 
 public void setup() {
   size(800, 600, P3D);
@@ -38,17 +40,23 @@ public void setup() {
   cam.setMinimumDistance(100);
   cam.setMaximumDistance(2000);
   ground = loadImage("./resource/ground2.png");
+  wandimg = loadImage("./resource/1.jpg");
   wand = loadShape("./resource/magic_wand.obj");
+
+  //wand_moon = loadShape("./resource/moon.obj");
+  //wand_moon.setTexture(wandimg);
+  //wand_heart = loadShape("./resource/heart.obj");
+  //wand_heart.setTexture(wandimg);
   textSize(32);
   sprite = loadImage("./resource/sprite.png");
   emitSound = new SoundFile(this,"./resource/keyPress.mp3");
   windSound = new SoundFile(this,"./resource/wind.mp3");
   fireSound = new SoundFile(this,"./resource/fire.mp3");
-  waterSound = new SoundFile(this,"./resource/water.mp3");
-  //woodSound1 = new SoundFile(this,"./resource/wood1.mp3");
+  waterSound = new SoundFile(this,"./resource/water2.mp3");
   woodSound2 = new SoundFile(this,"./resource/wood2.mp3");
-  disappear = new SoundFile(this,"./resource/disappear.mp3");
+  disappear = new SoundFile(this,"./resource/disappear2.mp3");
   
+
 }
 
 
@@ -56,46 +64,75 @@ public void setup() {
 public void draw() {
   iter ++;
   
+
   background(129,149,163);
-  //background(0);
-
-
-  drawWand();
-  drawGround();
   
-
-  windSys.run();
-  fireSys.run();
-  waterSys.run();
-  woodSys.run();
-
   fill(0,0,0);
   int PC = windSys.numParticles + waterSys.numParticles + woodSys.numParticles + fireSys.numParticles;
+  text("Frame rate: " + int(frameRate), -100, -300);
+  text("# of Particles: " + PC, -100, -250);
+
+ if(leftHit < 3){
+    drawLeftWand();
+    text("Hit by Wind: " + leftHit, -500, -350);
+  }
+  if(rightHit < 3){
+    drawRightWand();
+    text("Hit by Fire: " + rightHit, 350, -350);
+  }
+  drawGround();
+  
+  woodSys.run();
+  waterSys.run();
+  fireSys.run();
+  windSys.run();
+
+  
+  //fill(0,0,0);
+  //int PC = windSys.numParticles + waterSys.numParticles + woodSys.numParticles + fireSys.numParticles;
   //text("Frame rate: " + int(frameRate), -100, -300);
   //text("# of Particles: " + PC, -100, -250);
   
-  if(keyPressed && keyCode == 32 ) {
-    noLoop();
-  }
+  //reset when space key is pressed
+  //if(keyPressed && keyCode == RETURN ) {
+  //  leftHit = 0;
+  //  rightHit = 0;
+  //}
 
 }
 
 
-void drawWand(){
+void drawLeftWand(){
+  noStroke();
+  fill(204,190,188);
   pushMatrix();
-  translate(-500,0,0);
+  translate(-450,-80,0); 
   rotate(1.2*PI);
-  scale(50,50,50);
-  fill(155,0,155);
-  shape(wand,0,0);
+  rotateX( PI/2 );
+  drawCylinder( 30, 10, 150 );
   popMatrix();
   
+  fill(251,212,208);
   pushMatrix();
-  translate(500,0,0);
+  translate(-400, -150,0); 
+  sphere(20);
+  popMatrix();
+}
+  
+
+void drawRightWand(){
+  fill(198,198,176);
+  pushMatrix();
+  translate(450, -80,0);
   rotate(0.8*PI);
-  fill(155,155,0);
-  scale(50,50,50);
-  shape(wand,0,0);
+  rotateX(0.5*PI);
+  drawCylinder( 30, 10, 150 );
+  popMatrix();
+  
+  fill(250,248,133);
+  pushMatrix();
+  translate(400,-150,0);
+  sphere(20);
   popMatrix(); 
   
 }
@@ -113,4 +150,39 @@ void drawGround(){
   vertex(800, 0,-800,800,0);
   endShape();
   popMatrix();
+}
+
+
+void drawCylinder( int sides, float r, float h)
+{
+    float angle = 360 / sides;
+    float halfHeight = h / 2;
+
+    // draw top of the tube
+    beginShape();
+    for (int i = 0; i < sides; i++) {
+        float x = cos( radians( i * angle ) ) * r;
+        float y = sin( radians( i * angle ) ) * r;
+        vertex( x, y, -halfHeight);
+    }
+    endShape(CLOSE);
+
+    // draw bottom of the tube
+    beginShape();
+    for (int i = 0; i < sides; i++) {
+        float x = cos( radians( i * angle ) ) * r;
+        float y = sin( radians( i * angle ) ) * r;
+        vertex( x, y, halfHeight);
+    }
+    endShape(CLOSE);
+    
+    // draw sides
+    beginShape(TRIANGLE_STRIP);
+    for (int i = 0; i < sides + 1; i++) {
+        float x = cos( radians( i * angle ) ) * r;
+        float y = sin( radians( i * angle ) ) * r;
+        vertex( x, y, halfHeight);
+        vertex( x, y, -halfHeight);    
+    }
+    endShape(CLOSE);
 }
