@@ -65,20 +65,20 @@ public void draw() {
   iter ++;
   
 
-  background(129,149,163);
+  background(0);
   
   fill(0,0,0);
   int PC = windSys.numParticles + waterSys.numParticles + woodSys.numParticles + fireSys.numParticles;
-  text("Frame rate: " + int(frameRate), -100, -300);
-  text("# of Particles: " + PC, -100, -250);
+  //text("Frame rate: " + int(frameRate), -100, -300);
+  //text("# of Particles: " + PC, -100, -250);
 
  if(leftHit < 3){
     drawLeftWand();
-    text("Hit by Wind: " + leftHit, -500, -350);
+    //text("Hit by Wind: " + leftHit, -500, -350);
   }
   if(rightHit < 3){
     drawRightWand();
-    text("Hit by Fire: " + rightHit, 350, -350);
+    //text("Hit by Fire: " + rightHit, 350, -350);
   }
   drawGround();
   
