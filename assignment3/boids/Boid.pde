@@ -34,8 +34,7 @@ class Boid {
     group(index);
     update(dt);
     pos.add(velocity);
-    if (currentGoal != -1 && currentGoal != 0 &&PVector.dist(primes.get(index)
-    .get(currentGoal).location, pos) < 10) {
+    if (currentGoal != -1 && currentGoal != 0 &&PVector.dist(primes.get(index).get(currentGoal).location, pos) < 10) {
       currentGoal--;
     }
     avoid_abstacles();
@@ -44,7 +43,7 @@ class Boid {
     ArrayList<Boid> around = new ArrayList<Boid>();
     for (int i =0; i < boids.size(); i++) {
       Boid t = boids.get(i);
-      if (t != this &&(calc_distance(t,this) < allign_rad)) {
+      if (t != this &&(calc_distance(t,this) < 54)) {
         around.add(t);
       }
     }
@@ -78,7 +77,7 @@ class Boid {
       goalForce=PVector.sub(primes.get(index).get(currentGoal).location, pos);
       goalForce.normalize();
     }
-    float b=8;
+    float b=20;
     float c=0.05;
     float d=20;
     if (!allign) allignment.mult(0);    
@@ -112,10 +111,9 @@ class Boid {
     PVector group_speed = new PVector(0, 0);
     for (Boid b : close_neighbor) {
       float d = PVector.dist(pos, b.pos);
-      if (abs(d) < allign_rad) { // speed group
+      if (abs(d) < 54) { // speed group
         PVector v = b.velocity;
-        v.normalize();
-        v.div(d);  //weighted by distance
+        v.normalize().div(d);  //weighted by distance
         group_speed.add(v);
       }
     }
@@ -125,10 +123,8 @@ class Boid {
     PVector outward = new PVector(0, 0);
     for (Boid b : close_neighbor) {
       float d = PVector.dist(pos, b.pos);
-      if (abs(d) < separate_rad) { 
-        PVector diff = PVector.sub(pos, b.pos); // pointing away from neighbor
-        diff.normalize();
-        diff.div(d);        // Weight by distance
+      if (abs(d) < 82) { 
+        PVector diff = PVector.sub(pos, b.pos).normalize().div(d); // pointing away from neighbor
         outward.add(diff);
       }
     }
@@ -140,7 +136,7 @@ class Boid {
     int c = 0;
     for (Boid b : close_neighbor) {
       float d = PVector.dist(pos, b.pos);
-      if (abs(d) < cohese_rad) { // group size
+      if (abs(d) < 54) { // group size
         group_pos.add(b.pos); // Add location
         ++c;
       }

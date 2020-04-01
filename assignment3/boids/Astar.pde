@@ -49,9 +49,8 @@ class A_star {
        int min_f = fs.get(openlist.get(0));
        int min_ind = 0;
         for (int i = 1; i<openlist.size(); i++) {
-          Node t = openlist.get(i);
-          if (fs.get(t) < min_f) {
-            min_f = fs.get(t);
+          if (fs.get(openlist.get(i)) < min_f) {
+            min_f = fs.get(openlist.get(i));
             min_ind = i;
           }
         }

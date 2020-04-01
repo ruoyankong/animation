@@ -1,4 +1,4 @@
-// current newest
+// current newest 31 hao
 import java.util.*;
 import java.util.Map;
 Camera cam;
@@ -13,9 +13,12 @@ ArrayList<A_star> astar;
 ArrayList<Node> node;
 ArrayList<Node> node2;
 ArrayList<obstacle> obstacles;
-int num_obstacle = 3;
+boolean allign = true;
+boolean sep = true;
+boolean cohese = true;
+boolean to_goal = true;
+boolean suc=false;
 int num_node = 100;
-int num_boid = 10;
 Node goal = new Node(new PVector(0,0,0));
 String draw_c = "boids";
 ArrayList<Node> graph;
@@ -105,16 +108,7 @@ int calc_distance(Node start, Node end){
   return (int)sqrt(a*a + b*b + c*c);
 }
 
-float allign_rad=54;
-float separate_rad =82;
-float cohese_rad=54;
 
-
-boolean allign = true;
-boolean sep = true;
-boolean cohese = true;
-boolean to_goal = true;
-boolean suc=false;
 
 void setup () {
   size(800, 576,P3D); 
@@ -127,8 +121,8 @@ void setup () {
   node2 = new ArrayList<Node>();
   graph = new ArrayList<Node>();
   astar = new ArrayList<A_star>();
-  goal.location.x=width - 80;
-  goal.location.y=100;
+  goal.location.x=500;
+  goal.location.y=220;
   icon = loadImage("icon.png");
   icon.resize(20, 20);
   primes = new ArrayList<ArrayList<Node>>(); 
@@ -137,12 +131,12 @@ void setup () {
 
   while(true){
       int count = 0;
-  while(count <num_boid){
-    float x = random(width - 10);
-    float y = random(height - 10);
+  while(count <10){
+    float x = random(790);
+    float y = random(560);
     float z = 0;
-    x = (x + width) % width;
-    y = (y + height) % height;
+    x = (x + 800) % 800;
+    y = (y + 576) % 576;
     PVector temp = new PVector(x, y,z);
     boids.add(new Boid(new PVector(x, y,z)));
     node.add(new Node(temp));    
@@ -237,11 +231,10 @@ void setup () {
      }
    }
    boolean can = true;
-       for(int i =0; i< num_boid;i++){//each bird
+       for(int i =0; i< 10;i++){//each bird
       A_star ar = new A_star(graph);// put in aorresponding nodes
-      astar.add(ar);
-      Node agent = graph.get(i);        
-      ArrayList<Node> path = ar.astar(agent, goal);
+      astar.add(ar);      
+      ArrayList<Node> path = ar.astar(graph.get(i), goal);
       
       if(path != null){//if this particular agent found an optimal path to the goal
           path.add(0, goal); // goal's index ==0 first one  
@@ -328,14 +321,13 @@ void setup () {
     }  
   }
 
-// update the boid
-  for (int i = 0; i <boids.size(); i++) {//update boid and node
+  for (int i = 0; i <boids.size(); i++) {
     //println(equals(node.get(i),graph.get(i)));
     Boid current = boids.get(i);
     current.move_forward(dt,i);
     current.draw();
   }
-  for (int i = 0; i <boidss.size(); i++) {//update boid and node
+  for (int i = 0; i <boidss.size(); i++) {
     Boid current = boidss.get(i);
     current.move_forward(dt,i);  
     current.draw();
@@ -346,7 +338,6 @@ void setup () {
     text(text, 10, 40); 
     text_time -= 1; 
   }   
-  stroke(126);
   }  
 
 int text_time = 0;
