@@ -6,7 +6,6 @@ class Boid {
   PVector acceleration;
   float maxAcc;    
   float maxspeed;    
-  int delay = 0;
 
   Boid (PVector p) {
     pos = p;
@@ -25,12 +24,9 @@ class Boid {
 }
 
   void move_forward (float dt,int index) {
-    delay = (delay + 1) % 5;
     pos.x = (pos.x + width) % width;
     pos.y = (pos.y + height) % height;
-    if (delay ==0 ) {
     check_group();
-    }
     group(index);
     update(dt);
     pos.add(velocity);
