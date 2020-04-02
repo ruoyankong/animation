@@ -1,4 +1,4 @@
-// current newest 31 hao
+// current newest 31 hao--4.1
 import java.util.*;
 import java.util.Map;
 Camera cam;
@@ -10,8 +10,6 @@ float ang;
 ArrayList<Boid> boids;
 ArrayList<Boid> boidss;
 ArrayList<A_star> astar;
-ArrayList<Node> node;
-ArrayList<Node> node2;
 ArrayList<obstacle> obstacles;
 boolean allign = true;
 boolean sep = true;
@@ -96,20 +94,6 @@ class Node{
   }
 }
 
-void borders(float x, float y) {
-  x = (x + width) % width;
-  y = (y + height) % height;
-  
-}
-int calc_distance(Node start, Node end){
-  float a = start.location.x - end.location.x;
-  float b = start.location.y - end.location.y;
-  float c = start.location.z - end.location.z;
-  return (int)sqrt(a*a + b*b + c*c);
-}
-
-
-
 void setup () {
   size(800, 576,P3D); 
   cam = new Camera();
@@ -117,8 +101,6 @@ void setup () {
   boids = new ArrayList<Boid>();
   boidss = new ArrayList<Boid>();
   obstacles = new ArrayList<obstacle>();
-  node = new ArrayList<Node>();
-  node2 = new ArrayList<Node>();
   graph = new ArrayList<Node>();
   astar = new ArrayList<A_star>();
   goal.location.x=500;
@@ -139,7 +121,7 @@ void setup () {
     y = (y + 576) % 576;
     PVector temp = new PVector(x, y,z);
     boids.add(new Boid(new PVector(x, y,z)));
-    node.add(new Node(temp));    
+    //pl.add(new Node(temp));    
     graph.add(new Node(temp));
     ++count;    
   }
@@ -223,10 +205,8 @@ void setup () {
         for(obstacle ob : obstacles) {
           if(check_collsionss(a.location, b.location, ob.pos, 50)) notcold= false; 
         }
-        float distance = dist(a.location.x, a.location.y, b.location.x, b.location.y);
-         if (distance < 300 && i!=j&&notcold){ //connect all nodes within 300 cm
-            a.check_neighbor(b);
-           
+         if (dist(a.location.x, a.location.y, b.location.x, b.location.y) < 300 && i!=j&&notcold){ //connect all nodes within 300 cm
+            a.check_neighbor(b);           
         }          
      }
    }
@@ -234,8 +214,7 @@ void setup () {
        for(int i =0; i< 10;i++){//each bird
       A_star ar = new A_star(graph);// put in aorresponding nodes
       astar.add(ar);      
-      ArrayList<Node> path = ar.astar(graph.get(i), goal);
-      
+      ArrayList<Node> path = ar.astar(graph.get(i), goal);      
       if(path != null){//if this particular agent found an optimal path to the goal
           path.add(0, goal); // goal's index ==0 first one  
           primes.add(path);
@@ -254,7 +233,7 @@ void setup () {
   else{
   boids = new ArrayList<Boid>();
   obstacles = new ArrayList<obstacle>();
-  node = new ArrayList<Node>();
+  //pl = new ArrayList<Node>();
   graph = new ArrayList<Node>();
   astar = new ArrayList<A_star>();
   primes = new ArrayList<ArrayList<Node>>(); 
@@ -310,12 +289,8 @@ void setup () {
         int k=j+1;
         Node a = sol.get(j);
         Node b = sol.get(k);       
-        float x1 = a.location.x;
-        float y1 = a.location.y;
-        float x2 = b.location.x;
-        float y2 = b.location.y;
         stroke(126);
-        line(x1, y1, x2, y2);
+        line(a.location.x, a.location.y, b.location.x, b.location.y);
         a.path_highlight();
         b.path_highlight();
     }  
@@ -391,20 +366,10 @@ void mousePressed () {
   }
   else if(draw_c=="boids") {     
     boidss.add(new Boid(new PVector(mouseX, mouseY,0)));
-    node2.add(new Node(new PVector(mouseX, mouseY,0)));
     A_star a = new A_star(graph);// put in aorresponding nodes
     astar.add(a);
-    Node agent = node2.get(cnt); //always the first one       
-    ArrayList<Node> solution = a.astar(agent, goal);
-    if(solution != null){//if this particular agent found an optimal path to the goal
-     solution.add(0, goal); // goal's index ==0 first one         
-     for(int j = 0; j<solution.size();j++){
-       Node b = solution.get(j);
-       b.display();     
-      }
-    }
-    primes.add(solution);
     ++cnt;
+    if(cnt>=10) draw_c="obstacles";
   }
 }
 void mouseDragged() 
