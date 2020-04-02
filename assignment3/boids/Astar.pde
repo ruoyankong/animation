@@ -18,6 +18,18 @@ class A_star {
     float d2 = a.location.y - b.location.y;
     return (int)sqrt(d1*d1 + d2*d2);
   }
+  ArrayList<Node> record_path(ArrayList<Node>  pres, Node cur) {  
+    ArrayList<Node> path = new ArrayList<Node>();  
+    while (cur.former != null) {  
+      if (pres.indexOf(cur) != -1) {  
+        cur = pres.get(pres.indexOf(cur)).former;  
+        path.add(cur);  
+      }  
+      else  
+        return null;  
+    }  
+    return path;  
+  }
 
   ArrayList<Node> astar(Node start, Node goal) {
     closelist = new ArrayList<Node> ();
@@ -42,16 +54,8 @@ class A_star {
             min_ind = i;
           }
         }
-      if (graph.indexOf(openlist.get(min_ind))==110) {
-        ArrayList<Node> path = new ArrayList<Node>();
-        while (goal.former != null) { 
-          if (pres.indexOf(goal) != -1) {
-            goal = pres.get(pres.indexOf(goal)).former;
-            path.add(goal);
-          }
-          else return null;
-        }
-        return path;
+if (graph.indexOf(openlist.get(min_ind))==graph.indexOf(goal)) { 
+        return record_path(pres, goal);
       }     
       Node c= openlist.get(min_ind);
       closelist.add(c);

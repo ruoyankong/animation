@@ -16,7 +16,7 @@ boolean sep = true;
 boolean cohese = true;
 boolean to_goal = true;
 boolean suc=false;
-int num_node = 100;
+int num_node = 130;
 Node goal = new Node(new PVector(0,0,0));
 String draw_c = "boids";
 ArrayList<Node> graph;
